@@ -1,0 +1,35 @@
+{
+  "dataset": "MSC-derived",
+  "source_representation": "Split-specific MSC JSONL; exact record membership is stored in hasmem/preparation/cohorts.",
+  "splits": {
+    "train": {
+      "source_trace_sha256": "2e15452287a005161fc68a15157a53b193c5da1a616a95fcad109feb0f89f52c",
+      "model_inputs_sha256": "523913fcbb43d1d41049d60082aa09017e8a1a98d61cd431e5ae9a37c46162cf",
+      "owners_before_token_filter": 4526,
+      "events_before_token_filter": 12698,
+      "raw_source_sha256": "a45aa4e88550c9837ab193b8f2c500b29156c89283d408502c99634e1cf8ef7d"
+    },
+    "validation": {
+      "source_trace_sha256": "7c9050c1e9eca1538eb28f519c0a39dc7b3382d52bd56068b4d075ea2d87f469",
+      "model_inputs_sha256": "21a5c85952fc146804581a9e92b45d881df022cb2f0dab782d1919adb292baa2",
+      "owners_before_token_filter": 272,
+      "events_before_token_filter": 662,
+      "raw_source_sha256": "07e48c6ff737cc0811dbe37f5230787b625dd57e68ff5e298637c6d2ab2d0211"
+    }
+  },
+  "validation_qwen25_7b": {
+    "source_owners": 272,
+    "eligible_owners": 268,
+    "source_events": 662,
+    "eligible_events": 646,
+    "questions": 535,
+    "max_records_per_owner": 7,
+    "skipped_value_over_48_tokens": 13,
+    "skipped_owners_fewer_than_2_records": 4
+  },
+  "verification": {
+    "trace_hashes_match_paper_data_audit": true,
+    "validation_token_filter_recomputed": true,
+    "raw_source_to_trace_end_to_end_locally_verified": false
+  }
+}

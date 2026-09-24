@@ -1,0 +1,25 @@
+{
+  "engine": "wallclock",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "local_files_only": false,
+  "seed": 2026091331,
+  "retrieval_k": 8,
+  "max_updates": 10000,
+  "policy_updates": 5081,
+  "select_in_band": false,
+  "data": {
+    "manifest": "../data/msc/manifest.json",
+    "longmemeval": "",
+    "validation_owners": 268,
+    "lme_questions": 500
+  },
+  "runtime": {
+    "training_seconds": 20400,
+    "evaluation_seconds": 86400
+  },
+  "eval_modes": [
+    "hard",
+    "adaptive"
+  ],
+  "method": {}
+}

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hasmem"
+version = "0.1.0"
+description = "Hard-Origin Adaptively Softened Memory for Long-Term LLM Agents"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.1", "transformers>=4.41,<6", "numpy>=1.24"]
+
+[project.scripts]
+hasmem = "hasmem.cli:main"
+hasmem-prepare-msc = "hasmem.preparation.msc:main"
+hasmem-judge = "hasmem.judge:main"
+
+[project.urls]
+Repository = "https://github.com/ZihongHe/HasMem"
+
+[tool.setuptools.packages.find]
+include = ["hasmem*"]
+
+[tool.setuptools.package-data]
+"hasmem.preparation" = ["cohorts/*.json"]
+
+[tool.setuptools.data-files]
+"share/licenses/hasmem" = ["third_party/LongMemEval-LICENSE"]

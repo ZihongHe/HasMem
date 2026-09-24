@@ -1,0 +1,38 @@
+{
+  "engine": "step",
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "local_files_only": false,
+  "seed": 2026091331,
+  "retrieval_k": 8,
+  "max_updates": 5465,
+  "policy_updates": 5081,
+  "select_in_band": false,
+  "data": {
+    "manifest": "../data/msc/manifest.json",
+    "longmemeval": "",
+    "validation_owners": 268,
+    "lme_questions": 500
+  },
+  "runtime": {
+    "training_seconds": 86400,
+    "evaluation_seconds": 86400
+  },
+  "eval_modes": [
+    "hard",
+    "adaptive"
+  ],
+  "method": {
+    "force": true,
+    "band": true,
+    "band_weight": 0.6,
+    "unkeep_band": 0.12,
+    "force_unkeep_start": 0.75,
+    "force_unkeep_end": 0.15,
+    "unkeep_target_start": 0.5,
+    "unkeep_target_end": 0.22,
+    "shrink_frac": 0.1,
+    "use_reader": true,
+    "use_global": true,
+    "use_soft": true
+  }
+}

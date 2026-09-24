@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "Please cite the HasMem paper when using this software."
+title: "HasMem: Hard-Origin Adaptively Softened Memory for Long-Term LLM Agents"
+type: software
+version: 0.1.0
+authors:
+  - family-names: He
+    given-names: Zihong
+    affiliation: "The Hong Kong University of Science and Technology (Guangzhou)"
+  - family-names: Shen
+    given-names: Junxiao
+    affiliation: "University of Bristol"
+  - family-names: Liang
+    given-names: Chen
+    affiliation: "The Hong Kong University of Science and Technology (Guangzhou)"
+  - family-names: Liang
+    given-names: Hai-Ning
+    affiliation: "The Hong Kong University of Science and Technology (Guangzhou)"
+repository-code: "https://github.com/ZihongHe/HasMem"
