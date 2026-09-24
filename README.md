@@ -4,7 +4,7 @@ HasMem maintains persistent memory as continuous slots initialized from a frozen
 
 This repository contains the training and evaluation implementation, local configuration files, deterministic data preparation, and tests. The implementation supports Qwen2.5-Instruct backbones and the Mistral-Instruct adapter configuration described in the paper.
 
-[![HasMem architecture](assets/architecture.svg)](assets/architecture.svg)
+<a href="assets/architecture.svg"><img src="assets/architecture.svg" alt="HasMem architecture" width="100%"></a>
 
 [High-resolution PNG](assets/architecture.png)
 
