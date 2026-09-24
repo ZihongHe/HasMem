@@ -3,6 +3,7 @@ message: "Please cite the HasMem paper when using this software."
 title: "HasMem: Hard-Origin Adaptively Softened Memory for Long-Term LLM Agents"
 type: software
 version: 0.1.0
+license: MIT
 authors:
   - family-names: He
     given-names: Zihong

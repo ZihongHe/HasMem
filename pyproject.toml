@@ -7,6 +7,7 @@ name = "hasmem"
 version = "0.1.0"
 description = "Hard-Origin Adaptively Softened Memory for Long-Term LLM Agents"
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = ["torch>=2.1", "transformers>=4.41,<6", "numpy>=1.24"]
 

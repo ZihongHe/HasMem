@@ -108,8 +108,11 @@ class Experiment:
         self.seed = spec['seed']; self.rng = random.Random(self.seed)
         torch.manual_seed(self.seed); torch.cuda.manual_seed_all(self.seed)
         torch.set_num_threads(1)
-        self.tok = AutoTokenizer.from_pretrained(spec['model'],local_files_only=bool(plan.get("local_files_only", False)))
-        self.model = AutoModelForCausalLM.from_pretrained(spec['model'],local_files_only=bool(plan.get("local_files_only", False)),
+        model_options = {'local_files_only': bool(plan.get('local_files_only', False))}
+        if spec.get('model_revision') is not None:
+            model_options['revision'] = spec['model_revision']
+        self.tok = AutoTokenizer.from_pretrained(spec['model'], **model_options)
+        self.model = AutoModelForCausalLM.from_pretrained(spec['model'], **model_options,
             torch_dtype=torch.bfloat16, attn_implementation='sdpa').cuda().eval()
         for p in self.model.parameters(): p.requires_grad_(False)
         self.base_parameters = list(self.model.parameters())

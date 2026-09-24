@@ -4,11 +4,12 @@ The local release was checked with Python 3.13, PyTorch 2.7.1+cu118, Transformer
 
 ```bash
 python -m compileall -q hasmem tests
+# After preparing data and setting the configuration paths:
 python -m hasmem check-config --config configs/fixed_steps.json
 python -m unittest discover -s tests -v
 ```
 
-The suite includes 72 checks across causal rollout, KEEP identity, width limits, SHRINK/EXPAND behavior, constrained search, native assistant termination, deterministic MSC preparation, and configuration/checkpoint validation, local judge coverage, and fail-closed cohort reconstruction. The CUDA integration check creates a random one-layer Qwen2 model and a constructed dataset; it performs warmup and policy updates, saves and restores the checkpoint, evaluates both hard and adaptive conditions, and runs the public local-record inference CLI. It skips on hosts without CUDA bfloat16 support.
+The suite includes 83 checks across causal rollout, KEEP identity, width limits, SHRINK/EXPAND behavior, constrained search, native assistant termination, deterministic MSC preparation, and configuration/checkpoint validation, local judge coverage, fail-closed cohort reconstruction, input preflight, and optional model-revision pinning. The CUDA integration check creates a random one-layer Qwen2 model and a constructed dataset; it performs warmup and policy updates, saves and restores the checkpoint, evaluates both hard and adaptive conditions, and runs the public local-record inference CLI. It skips on hosts without CUDA bfloat16 support.
 
 The portable entry point removes cluster-specific scheduler/path requirements. Data and model paths are supplied by configuration. Explicit `return_dict=False` keeps chat-template token sequences consistent across supported Transformers versions. Checkpoints load with PyTorch's restricted `weights_only=True` mode. The training equations, native chat framing, greedy decoding, and core action/width rules are retained.
 

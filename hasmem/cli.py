@@ -15,6 +15,9 @@ def load_config(path):
         raise ValueError('engine must be step or wallclock')
     if not config.get('model'):
         raise ValueError('Set model to a Hugging Face model ID or local model directory')
+    revision = config.get('model_revision')
+    if revision is not None and (not isinstance(revision, str) or not revision.strip()):
+        raise ValueError('model_revision must be a nonempty revision string when specified')
     if config.get('engine') == 'wallclock' and config.get('method'):
         raise ValueError('The wallclock recipe has fixed method settings; use the step engine for ablations')
     if 'backbone_tag' in config:
@@ -33,6 +36,40 @@ def local_path(value, root):
         return None
     path = Path(os.path.expandvars(str(value))).expanduser()
     return str((root / path).resolve()) if not path.is_absolute() else str(path.resolve())
+
+
+def validate_inputs(config, root, command, checkpoint=None, records=None):
+    """Check required local inputs before downloading or allocating a model."""
+    def require_file(value, label, relative_to):
+        if not value:
+            raise ValueError('Set ' + label)
+        path = Path(local_path(value, relative_to))
+        if not path.is_file():
+            raise FileNotFoundError(label + ' file does not exist: ' + str(path))
+        return path
+
+    checked = {}
+    if command != 'infer':
+        paths = config.get('data', {})
+        manifest_path = require_file(paths.get('manifest'), 'data.manifest', root)
+        manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+        trace_paths = manifest.get('trace_paths')
+        if not isinstance(trace_paths, dict):
+            raise ValueError('MSC manifest must contain a trace_paths mapping')
+        for split in ('train', 'validation'):
+            require_file(trace_paths.get(split), 'trace_paths.' + split, manifest_path.parent)
+        if paths.get('longmemeval'):
+            # Check availability without reading evaluation questions before training.
+            require_file(paths['longmemeval'], 'data.longmemeval', root)
+    if command in {'evaluate', 'infer'}:
+        checked['checkpoint'] = require_file(checkpoint, '--checkpoint', Path.cwd())
+    if command == 'infer':
+        path = require_file(records, '--records', Path.cwd())
+        checked['records'] = json.loads(path.read_text(encoding='utf-8'))
+        values = checked['records']
+        if not isinstance(values, list) or not values or any(not isinstance(x, str) or not x.strip() for x in values):
+            raise ValueError('records must be a nonempty JSON array of nonempty strings')
+    return checked
 
 
 def make_plan(config, root, command):
@@ -64,6 +101,8 @@ def make_plan(config, root, command):
     spec = {'label': 'hasmem', 'model': model, 'seed': int(config.get('seed', 2026091331)),
             'arm': 'curriculum', 'prompt_slots': int(config.get('retrieval_k', 8)),
             **config.get('method', {})}
+    if config.get('model_revision') is not None:
+        spec['model_revision'] = config['model_revision']
     if 'backbone_tag' in config:
         spec['backbone_tag'] = config['backbone_tag']
     if spec['arm'] != 'curriculum':
@@ -103,6 +142,7 @@ def main():
     args = parser.parse_args()
     config, root = load_config(args.config)
     if args.command == 'check-config':
+        validate_inputs(config, root, 'train')
         print(json.dumps({'valid': True, 'engine': config.get('engine', 'step'),
                           'retrieval_k': config.get('retrieval_k', 8)}))
         return
@@ -112,6 +152,7 @@ def main():
         parser.error('--checkpoint is required')
     if args.command == 'infer' and (not args.records or not args.question):
         parser.error('infer requires --records and --question')
+    checked = validate_inputs(config, root, args.command, args.checkpoint, args.records)
     os.environ.setdefault('CUBLAS_WORKSPACE_CONFIG', ':4096:8')
     import torch
     if not torch.cuda.is_available():
@@ -133,12 +174,10 @@ def main():
             checkpoint = out / 'checkpoint.pt'
             write(out / 'CHECKPOINT.json', restore(ex, checkpoint))
         else:
-            checkpoint = Path(args.checkpoint).expanduser().resolve()
+            checkpoint = checked['checkpoint']
             write(out / 'CHECKPOINT.json', restore(ex, checkpoint))
         if args.command == 'infer':
-            records = json.loads(Path(args.records).read_text(encoding='utf-8'))
-            if not isinstance(records, list) or not records or any(not isinstance(x, str) or not x.strip() for x in records):
-                raise ValueError('records must be a nonempty JSON array of nonempty strings')
+            records = checked['records']
             with torch.no_grad():
                 encoded = ex.encode_case({'events': records, 'id': 'local_records'})
                 rollout = ex.rollout(encoded, 'adaptive', record_audit=True)

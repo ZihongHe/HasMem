@@ -4,23 +4,30 @@ HasMem maintains persistent memory as continuous slots initialized from a frozen
 
 This repository contains the training and evaluation implementation, local configuration files, deterministic data preparation, and tests. The implementation supports Qwen2.5-Instruct backbones and the Mistral-Instruct adapter configuration described in the paper.
 
-![HasMem architecture](assets/architecture.png)
+[![HasMem architecture](assets/architecture.svg)](assets/architecture.svg)
+
+[High-resolution PNG](assets/architecture.png)
 
 ## Installation
 
-Use Python 3.10 or newer. Install a CUDA-enabled PyTorch build suitable for your GPU, then run:
+Use Python 3.10 or newer. Create and activate a virtual environment:
 
 ```bash
 python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # Windows PowerShell: .venv\Scripts\Activate.ps1
+```
+
+Install a CUDA-enabled PyTorch build suitable for your GPU inside this active environment, then run:
+
+```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
 LLM training and inference require a CUDA GPU supporting bfloat16 and enough memory for the frozen backbone, its activations, and memory slots. The CPU tests do not download models or data. An additional CUDA integration test creates a tiny random model and checks training, checkpoint restoration, and generation.
 
-Model IDs can be downloaded through Transformers; a local model directory can also be used. Set `local_files_only` to `true` for offline execution. If a model requires authentication, export `HF_TOKEN` in your shell. `.env.example` lists optional environment variables with empty values; the program does not automatically load `.env` files. Keep tokens and populated local configuration files outside version control.
+Model IDs can be downloaded through Transformers; a local model directory can also be used. Set optional `model_revision` to a Hugging Face commit hash to pin both model and tokenizer; omitting it preserves the default revision behavior. Use the same revision when restoring a checkpoint. Set `local_files_only` to `true` for offline execution. If a model requires authentication, export `HF_TOKEN` in your shell. `.env.example` lists optional environment variables with empty values; the program does not automatically load `.env` files. Keep tokens and populated local configuration files outside version control.
 
 ## Data
 
@@ -42,7 +49,7 @@ Raw datasets and pretrained or trained model weights are not bundled in this rep
 
 ## Train
 
-Copy a configuration and edit its model/data paths before running. Relative data paths are resolved from the configuration file's directory.
+Copy a configuration and edit its model/data paths before running. Relative data paths are resolved from the configuration file's directory. `check-config` verifies the configured manifest and required data files without loading a model. Training, evaluation, and inference also check their required input files before model loading.
 
 ```bash
 python -m hasmem check-config --config configs/fixed_steps.json
@@ -98,6 +105,10 @@ python -m hasmem infer --config configs/fixed_steps.json --checkpoint outputs/fi
 - `hasmem/metrics.py` and `hasmem/stats.py`: local metrics and grouped paired statistics.
 - `configs/`: portable paper-related recipes.
 - `tests/`: causal rollout, no-op identity, search, data, and integration checks.
+
+## License
+
+The HasMem code is released under the [MIT License](LICENSE), permitting academic and commercial use, modification, and redistribution with the copyright and license notices preserved. Third-party components retain their respective licenses. Datasets and pretrained models are governed by their original terms.
 
 ## Citation and contact
 
