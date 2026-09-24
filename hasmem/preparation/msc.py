@@ -6,11 +6,66 @@ dialog_id (or dialoug_id), and session_id fields.
 from __future__ import annotations
 import argparse
 import hashlib
+import io
 import json
 import re
+import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Dict, Iterable, Iterator, List, Optional, Sequence
+
+
+MSC_MIRROR_REPOSITORY = "nayohan/multi_session_chat"
+MSC_MIRROR_REVISION = "78b67491c43823fc169cab827ab3f82805e0235b"
+MSC_MIRROR_FILES = {
+    "train": {
+        "path": "data/train-00000-of-00001-537fda2f9aae8ae7.parquet",
+        "sha256": "a5412b981afbe36b7bc1d9508b6958b5216059063dabfa67719930a4301bd631",
+        "rows": 17940,
+    },
+    "validation": {
+        "path": "data/validation-00000-of-00001-5e685f0241d31faf.parquet",
+        "sha256": "bd5ae3d7480c36b6aa34b67f5330a73859b638572a48495f9e694480d48ca4f5",
+        "rows": 3000,
+    },
+}
+
+
+def download_source(source_dir):
+    """Export a pinned public MSC mirror, verifying bytes and preserving row order."""
+    try:
+        import pyarrow.parquet as parquet
+    except ImportError as error:
+        raise RuntimeError('MSC download requires the data extra; from the repository, run: pip install -e ".[data]"') from error
+    source = Path(source_dir).resolve()
+    exports, audits = {}, {}
+    for split, info in MSC_MIRROR_FILES.items():
+        url = (f"https://huggingface.co/datasets/{MSC_MIRROR_REPOSITORY}/resolve/"
+               f"{MSC_MIRROR_REVISION}/{info['path']}")
+        with urllib.request.urlopen(url, timeout=120) as response:
+            raw = response.read()
+        if hashlib.sha256(raw).hexdigest() != info['sha256']:
+            raise ValueError(f"MSC mirror download hash mismatch: {split}")
+        rows = parquet.read_table(io.BytesIO(raw)).to_pylist()
+        if len(rows) != info['rows']:
+            raise ValueError(f"MSC mirror row count mismatch: {split}")
+        content = ''.join(json.dumps(row, ensure_ascii=False, separators=(',', ':')) + '\n'
+                          for row in rows).encode('utf-8')
+        target = source / f'{split}.jsonl'
+        if target.exists() and target.read_bytes() != content:
+            raise FileExistsError(f"Existing source file differs from the pinned export: {target}")
+        exports[target] = content
+        audits[split] = {'url': url, 'parquet_sha256': info['sha256'], 'rows': len(rows),
+                         'export_sha256': hashlib.sha256(content).hexdigest()}
+    source.mkdir(parents=True, exist_ok=True)
+    for target, content in exports.items():
+        if not target.exists():
+            with target.open('xb') as handle:
+                handle.write(content)
+    metadata = {'repository': MSC_MIRROR_REPOSITORY, 'revision': MSC_MIRROR_REVISION,
+                'source_type': 'public MSC mirror', 'splits': audits}
+    (source / 'source_metadata.json').write_text(json.dumps(metadata, indent=2), encoding='utf-8')
+    return source
 
 def clip_text(value: object, chars: int = 7000) -> str:
     text = re.sub(r"\s+", " ", str(value or "")).strip()
@@ -528,6 +583,7 @@ def main():
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument('--source-dir', help='Raw split-specific MSC JSONL directory')
     source.add_argument('--trace-dir', help='Preserved GLOBAL_PROMOTION_TRACE_*.jsonl directory')
+    source.add_argument('--download-source', metavar='DIR', help='Download and verify a pinned public MSC mirror into DIR')
     parser.add_argument('--output-dir', required=True)
     parser.add_argument('--pairs-per-episode', type=int, default=2)
     parser.add_argument('--new-cohort', action='store_true', help='Build a new cohort instead of the verified paper membership')
@@ -540,7 +596,8 @@ def main():
     else:
         if args.verify_paper_traces:
             parser.error('--verify-paper-traces requires --trace-dir')
-        print(prepare(args.source_dir, args.output_dir, args.pairs_per_episode,
+        source_dir = download_source(args.download_source) if args.download_source else args.source_dir
+        print(prepare(source_dir, args.output_dir, args.pairs_per_episode,
                       args.train_fact_limit, args.validation_fact_limit, paper_cohort=not args.new_cohort))
 
 

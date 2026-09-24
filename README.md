@@ -33,13 +33,16 @@ Model IDs can be downloaded through Transformers; a local model directory can al
 
 ### MSC-derived reconstruction probe
 
-Obtain the MSC dataset under its original terms and prepare split-specific JSONL files named `train.jsonl` and `validation.jsonl`. The input fields are `persona1`, `persona2`, `dialogue`, `speaker`, `dialog_id` (the alternate source spelling `dialoug_id` is accepted), and `session_id`. Input requirements, cohort verification, and source availability are documented in [Data preparation](docs/DATA.md).
+Prepare the paper cohort from the pinned [MSC dataset mirror](https://huggingface.co/datasets/nayohan/multi_session_chat). Install the optional data dependency, then download and prepare its train and validation splits:
 
 ```bash
-python -m hasmem.preparation.msc --source-dir /path/to/msc/jsonl --output-dir data/msc
+python -m pip install -e ".[data]"
+python -m hasmem.preparation.msc --download-source /path/to/msc-source --output-dir data/msc
 ```
 
-The default preparation uses the released text-free paper cohort manifests and verifies every reconstructed record and the full ordered model input by SHA-256. It stops if the source export does not match. The original split-specific export and traces are not bundled; conversion from the native ParlAI release to that export has not been independently verified. The resulting `manifest.json` points to the prepared owner traces. The loader derives record-specific reconstruction questions and applies the paper's token-length and event-count filters. The full Qwen evaluation cohort used in the paper contains 268 development owners, 646 records, and 535 questions. Check `DATA_AUDIT.json` before comparing a new corpus or tokenizer with these results.
+The downloader pins the dataset revision and verifies each downloaded file by SHA-256. Preparation then verifies every selected record and the complete ordered model input against the released text-free cohort manifests. The reconstructed train and development inputs match the paper traces. The Qwen2.5-7B evaluation cohort contains 268 development owners, 646 records, and 535 questions. `manifest.json` points to the prepared traces; `DATA_AUDIT.json` records tokenizer-dependent counts and final cohort hashes.
+
+For an existing compatible JSONL export, use `--source-dir /path/to/msc/jsonl` instead of `--download-source`. Source provenance, dataset terms, input schema, and transformation details are described in [Data preparation](docs/DATA.md).
 
 ### LongMemEval-S
 

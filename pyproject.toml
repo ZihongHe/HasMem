@@ -11,6 +11,9 @@ license = {file = "LICENSE"}
 requires-python = ">=3.10"
 dependencies = ["torch>=2.1", "transformers>=4.41,<6", "numpy>=1.24"]
 
+[project.optional-dependencies]
+data = ["pyarrow>=14"]
+
 [project.scripts]
 hasmem = "hasmem.cli:main"
 hasmem-prepare-msc = "hasmem.preparation.msc:main"
